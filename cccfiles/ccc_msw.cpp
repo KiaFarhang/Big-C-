@@ -1,6 +1,22 @@
 /*
+  CCC Graphics Library
+  COPYRIGHT (C) 1994 - 2011 Cay S. Horstmann. All Rights Reserved.
 
-COPYRIGHT (C) 1994 - 2002 Cay S. Horstmann. All Rights Reserved.
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
+/*
 
 NOTE TO STUDENTS: Do not attempt to study the contents of this file. You
 can, and should, use the services provided in this file without knowing
@@ -12,6 +28,8 @@ the highly technical details of the implementation.
 #include <cstring>
 #include <cstdlib>
 #include <cstdio>
+
+#include <tchar.h>
 
 using namespace std;
 
@@ -28,12 +46,11 @@ extern int ccc_win_main();
 
 /*-------------------------------------------------------------------------*/
 
-long FAR PASCAL /* _export */ ccc_win_proc(HWND hwnd, UINT message, UINT wParam, LONG lParam)
+long FAR PASCAL ccc_win_proc(HWND hwnd, UINT message, UINT wParam, LONG lParam)
 {  
    static int paint_flag = 1;   // tells WinProc to call ccc_win_main()
    PAINTSTRUCT ps; // the display's paint struct
    HDC mainwin_hdc;
-   HINSTANCE hInstance;
   
    switch (message)
    {  
@@ -78,15 +95,15 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       wndclass.hCursor = LoadCursor (NULL, IDC_ARROW);
       wndclass.hbrBackground = (HBRUSH)GetStockObject (WHITE_BRUSH);
       wndclass.lpszMenuName = NULL;
-      wndclass.lpszClassName = "CCC_WIN";
+      wndclass.lpszClassName = _T("CCC_WIN");
 
       RegisterClass (&wndclass);
    }
 
-   char title[80];
-   GetModuleFileName(hInstance, title, sizeof(title));
+   TCHAR title[80];
+   GetModuleFileName(hInstance, title, sizeof(title) / sizeof(title[0]));
 
-   HWND hwnd = CreateWindow("CCC_WIN",
+   HWND hwnd = CreateWindow(wndclass.lpszClassName,
       title,
       WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX,
       CW_USEDEFAULT,
@@ -122,7 +139,7 @@ void GraphicWindow::open(HWND hwnd, HDC mainwin_hdc)
 {  
    HINSTANCE hInstance = (HINSTANCE)
       GetWindowLong(hwnd, GWL_HINSTANCE);
-   child_hwnd = CreateWindow("static",
+   child_hwnd = CreateWindow(_T("static"),
       NULL,
       WS_CHILD | WS_VISIBLE, /* style */
       0,  /* x position */
@@ -134,7 +151,7 @@ void GraphicWindow::open(HWND hwnd, HDC mainwin_hdc)
       hInstance,
       0);
 
-   edit_hwnd  = CreateWindow("edit",
+   edit_hwnd  = CreateWindow(_T("edit"),
       NULL,
       WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL, /* style */
       0,  /* x position */
@@ -171,8 +188,8 @@ void GraphicWindow::open(HWND hwnd, HDC mainwin_hdc)
    ReleaseDC(hwnd, hdc);
    if (!_hbm)
    {  
-      MessageBox(hwnd, (LPSTR)"Memory problems in Bitmap Creation",
-         (LPSTR)"CCC Error", MB_ICONHAND);
+      MessageBox(hwnd, _T("Memory problems in Bitmap Creation"),
+         _T("CCC Error"), MB_ICONHAND);
          SendMessage(hwnd, WM_DESTROY, 0, 0L);
          return;
    }
@@ -257,32 +274,64 @@ void GraphicWindow::line(double xfrom, double yfrom, double xto,
    LineTo(_bitmap_hdc,user_to_disp_x(xto), user_to_disp_y(yto));
 }
 
+TCHAR* string2PTCHAR(string s)
+{
+#ifdef _UNICODE
+   int targetLength = MultiByteToWideChar(CP_ACP, 0, s.c_str(), -1, NULL, 0);
+
+   if (targetLength == 0) { return NULL; }
+
+   TCHAR* target = new TCHAR[targetLength];
+   MultiByteToWideChar(CP_ACP, 0, s.c_str(), -1, target, targetLength);
+   return target;
+#else
+   TCHAR* target = new TCHAR[s.length() + 1];
+   strcpy_s(target, s.length() + 1, s.c_str());
+   return target;
+#endif
+}
+
+string PTCHAR2string(TCHAR* p)
+{
+#ifdef _UNICODE
+   int targetLength = WideCharToMultiByte(CP_ACP, 0, p, -1, NULL, 0, NULL, FALSE);
+   char* target = new char[targetLength];
+   WideCharToMultiByte(CP_ACP, 0, p, -1, target, targetLength, NULL, FALSE);
+   string result(target);
+   delete[] target;
+   return result;
+#else
+   return string(p);
+#endif
+}
+
 void GraphicWindow::text(string s, double x, double y)
 {  
-   const char* t = s.c_str();
+   TCHAR* t = string2PTCHAR(s);
    SetBkMode(_hdc, TRANSPARENT);
-   TextOut(_hdc, user_to_disp_x(x), user_to_disp_y(y), t, lstrlen(t));
+   TextOut(_hdc, user_to_disp_x(x), user_to_disp_y(y), t, _tcslen(t));
    SetBkMode(_bitmap_hdc, TRANSPARENT);
-   TextOut(_bitmap_hdc, user_to_disp_x(x), user_to_disp_y(y), t, lstrlen(t));
+   TextOut(_bitmap_hdc, user_to_disp_x(x), user_to_disp_y(y), t, _tcslen(t));
+   delete[] t;
 }
 
 void GraphicWindow::statusline_prompt(string s)
 {  
    const int M_WIDTH = 30;
-   const char* t = s.c_str();
+   TCHAR* t = string2PTCHAR(s);
    HDC child_hdc;
 
    child_hdc = GetDC(child_hwnd);
    SIZE sz;
-   GetTextExtentPoint32(child_hdc, t, strlen(t), &sz);
+   GetTextExtentPoint32(child_hdc, t, s.length(), &sz);
    _mlength = sz.cx;
-   GetTextExtentPoint32(child_hdc, " ", 1, &sz);
+   GetTextExtentPoint32(child_hdc, _T(" "), 1, &sz);
    _mlength += sz.cx;
    ReleaseDC(child_hwnd, child_hdc);
    MoveWindow (child_hwnd, 1, 0, _mlength, M_WIDTH, true);
-   SendMessage (child_hwnd, WM_SETTEXT,0, (LPARAM) (LPCSTR) t);
+   SendMessage (child_hwnd, WM_SETTEXT, 0, (LPARAM) t);
 
-   //move edit window from end of child window to edge of main window
+   // move edit window from end of child window to edge of main window
    MoveWindow (edit_hwnd, cwin._mlength+1, 0, cwin._disp_xmax, M_WIDTH, true);
 }
 
@@ -315,11 +364,11 @@ string GraphicWindow::get_string(string out_string)
    MSG msg;
    const int BUFFSIZE = 80;
 
-   char buffer[BUFFSIZE];
-   memset(buffer, 0, sizeof(buffer));
-   SendMessage (edit_hwnd, WM_SETTEXT,0, (LPARAM) (LPCSTR) buffer);
+   TCHAR buffer[BUFFSIZE];
+   buffer[0] = 0;
+   SendMessage (edit_hwnd, WM_SETTEXT,0, (LPARAM) buffer);
 
-   string temp;
+   string result;
 
    statusline_prompt(out_string);   // output prompt
 
@@ -337,21 +386,23 @@ string GraphicWindow::get_string(string out_string)
          case WM_KEYUP:
             if ((msg.wParam == VK_RETURN) || (msg.wParam == VK_ESCAPE))
             {  
-               SendMessage (edit_hwnd, WM_GETTEXT,sizeof(buffer), (LPARAM) (LPCSTR) buffer);
-               int buflen = strlen(buffer);
+               SendMessage(edit_hwnd, WM_GETTEXT, sizeof(buffer) / sizeof(buffer[0]), (LPARAM) buffer);
+
+
+               int buflen = _tcslen(buffer);
                if (buflen >= 2 && buffer[buflen - 2] == '\r') buffer[buflen - 2] = 0;
-               temp = buffer;
+               result = PTCHAR2string(buffer);
                //shrink child windows after use
 
                MoveWindow (child_hwnd, 0, 0, 0, 0, true);
                MoveWindow (edit_hwnd, 0, 0, 0, 0, true);
                SetFocus(phwnd);
-               return temp;
+               return result;
             }
             break;
       }
    }
-   return temp; 
+   return result; 
 }
 
 Point GraphicWindow::get_mouse(string outstr)
@@ -362,8 +413,7 @@ Point GraphicWindow::get_mouse(string outstr)
    int mouse_x, mouse_y;
 
    statusline_prompt(outstr);
-   char buf[100];
-
+   
 
    while (GetMessage(&msg, (HWND) NULL, 0, 0))
    {  
@@ -382,8 +432,9 @@ Point GraphicWindow::get_mouse(string outstr)
          case WM_MOUSEMOVE:
             mouse_x = LOWORD(msg.lParam);
             mouse_y = HIWORD(msg.lParam);
-            sprintf(buf, "(%f,%f)",disp_to_user_x(mouse_x),disp_to_user_y(mouse_y)); 
-            SendMessage(edit_hwnd, WM_SETTEXT, 0, (LPARAM)buf);
+            TCHAR msg[100];
+            _stprintf_s(msg, _T("(%f,%f)"), disp_to_user_x(mouse_x), disp_to_user_y(mouse_y)); 
+            SendMessage(edit_hwnd, WM_SETTEXT, 0, (LPARAM) msg);
             break;
       }
    }

@@ -1,3 +1,21 @@
+/*
+  CCC Graphics Library
+  COPYRIGHT (C) 1994 - 2011 Cay S. Horstmann. All Rights Reserved.
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
 #include <wx/wx.h>
 #include <cmath>
 #include <cstring>
@@ -314,7 +332,8 @@ void GraphicCanvas::draw(wxDC& dc, Message s)
    int disp_x = user_to_disp_x(s.get_start().get_x());
    int disp_y = user_to_disp_y(s.get_start().get_y());
    string text = s.get_text();
-   dc.DrawText(text.c_str(), disp_x, disp_y);
+   wxString msg(text.c_str(), wxConvLocal);
+   dc.DrawText(msg, disp_x, disp_y);
 }
 
 void GraphicCanvas::coord(double xmin, double ymin,
@@ -395,7 +414,7 @@ string GraphicWindow::get_string(string outstr)
    else
    {
       waiting_for_string_input = true;
-      frame->SetStatusText(outstr.c_str());
+      frame->SetStatusText(wxString(outstr.c_str(), wxConvLocal));
       frame->set_text_focus(true);
       longjmp(buf, 1);
       return ""; 
@@ -410,7 +429,7 @@ Point GraphicWindow::get_mouse(string outstr)
    else 
    {
       waiting_for_mouse_input = true;
-      frame->SetStatusText(outstr.c_str());
+      frame->SetStatusText(wxString(outstr.c_str(), wxConvLocal));
       longjmp(buf, 1);
       return Point(); 
    }
@@ -421,7 +440,7 @@ void GraphicWindow::mouse_input(Point p)
    if (waiting_for_mouse_input)
    {
       mouse_inputs.push_back(p);
-      frame->SetStatusText("");
+      frame->SetStatusText(wxT(""));
       waiting_for_mouse_input = false;
       frame->run();
    }
@@ -432,7 +451,7 @@ void GraphicWindow::string_input(string s)
    if (waiting_for_string_input)
    {
       string_inputs.push_back(s);
-      frame->SetStatusText("");
+      frame->SetStatusText(wxT(""));
       frame->set_text_focus(false);
       waiting_for_string_input = false;
       frame->run();
@@ -449,7 +468,7 @@ GraphicFrame::GraphicFrame(const wxString& appName)
    window = new GraphicCanvas(this);
    CreateStatusBar();
 
-   text = new wxTextCtrl(this, ID_TEXT, "", 
+   text = new wxTextCtrl(this, ID_TEXT, wxT(""), 
       wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
 
    wxBoxSizer* frame_sizer = new wxBoxSizer(wxVERTICAL);
@@ -480,20 +499,48 @@ void GraphicFrame::set_text_focus(bool b)
 
 void GraphicFrame::OnEnter(wxCommandEvent& event)
 {
-   string input = text->GetValue().c_str();
-   text->SetValue("");
+   string input(text->GetValue().mb_str());
+   text->SetValue(wxT(""));
    cwin.string_input(input);   
 }
 
 /*-------------------------------------------------------------------------*/
 
+#ifdef __WXMAC__
+struct ProcessSerialNumber 
+{
+   int highLongOfPSN;
+   int lowLongOfPSN;
+};
+
+extern "C" 
+{ 
+   void CPSEnableForegroundOperation(ProcessSerialNumber* psn); 
+   void GetCurrentProcess(ProcessSerialNumber* psn);
+   void SetFrontProcess(ProcessSerialNumber* psn);
+}
+#endif
+
+
 GraphicApp::GraphicApp()
 {
-   frame = new GraphicFrame(GetAppName());
+/* 
+http://www.miscdebris.net/blog/2010/03/30/solution-for-my-mac-os-x-gui-program-doesnt-get-focus-if-its-outside-an-application-bundle/
+this hack enables to have a GUI on Mac OSX even if the
+     * program was called from the command line (and isn't a bundle) */
+#ifdef __WXMAC__
+
+   ProcessSerialNumber psn;
+   
+   GetCurrentProcess( &psn );
+   CPSEnableForegroundOperation( &psn );
+   SetFrontProcess( &psn );
+#endif
 }
 
 bool GraphicApp::OnInit()
 {
+   frame = new GraphicFrame(GetAppName());
    frame->Show(true);
    return true;
 }

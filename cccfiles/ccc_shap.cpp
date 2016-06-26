@@ -1,4 +1,22 @@
-#include <cstdio>
+/*
+  CCC Graphics Library
+  COPYRIGHT (C) 1994 - 2011 Cay S. Horstmann. All Rights Reserved.
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
+#include <sstream>
 
 #include "ccc_shap.h"
 
@@ -100,9 +118,9 @@ Message::Message(Point s, const string& m)
 Message::Message(Point s, double x)
 {  
    start = s;
-   char buf[20];
-   sprintf(buf, "%g", x);
-   text = buf;
+   ostringstream strm;
+   strm << x;
+   text = strm.str();
 }
 
 

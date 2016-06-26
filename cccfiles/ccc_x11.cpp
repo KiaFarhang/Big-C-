@@ -1,6 +1,22 @@
 /*
+  CCC Graphics Library
+  COPYRIGHT (C) 1994 - 2011 Cay S. Horstmann. All Rights Reserved.
 
-COPYRIGHT (C) 1994 - 2002 Cay S. Horstmann. All Rights Reserved.
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
+/*
 
 NOTE TO STUDENTS: Do not attempt to study the contents of this file. You
 can, and should, use the services provided in this file without knowing
@@ -24,9 +40,10 @@ const double DEFAULT_YMAX = -10;
 static int DEF_WIDTH = 480;
 static int DEF_HEIGHT = 480;
 
-// The following is an alias for an X fonts.
+// The following is an alias for an X11 font. 
 // Make sure this is available on your system.  Substitute as necessary.
-#define SYS_FONT_NAME  "-adobe-courier-bold-r-normal-*-14-*-*-*-*-*-*"
+// Run xfontsel to get a font string.
+#define SYS_FONT_NAME  "-adobe-courier-bold-r-normal-*-*-120-*-*-*-*-*-*"
 
 /* Our program wrapper. */
 extern int ccc_win_main();
@@ -426,7 +443,7 @@ int main(int argc, char** argv)
    unsigned int border_width = 4;
 
    char* window_name = argv[0];
-   char* icon_name = "GCT";
+   char* icon_name = (char*) "GCT";
 
    Pixmap icon_pixmap;
    XSizeHints* size_hints;
@@ -495,7 +512,7 @@ int main(int argc, char** argv)
    wm_hints->flags = StateHint | IconPixmapHint | InputHint;
 
    class_hints->res_name = progname;
-   class_hints->res_class = "chigcx";
+   class_hints->res_class = (char*) "chigcx";
 
    XSetWMProperties(display, win, &windowName, &iconName, argv, argc,
       size_hints, wm_hints, class_hints);
