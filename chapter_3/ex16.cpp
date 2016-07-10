@@ -1,5 +1,4 @@
 #include <iostream>
-
 using namespace std;
 
 int main()
@@ -40,6 +39,15 @@ int main()
 
 		}
 	}
+
+
+	while (cin >> input)
+	{
+		double output2 = input / rate;
+
+		cout << input << " yen = $" << output2 << "\n";
+	}
+
 
 	return 0;
 
