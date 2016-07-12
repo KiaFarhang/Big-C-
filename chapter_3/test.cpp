@@ -34,27 +34,11 @@ int main()
 
 		if (s_new <= 0)
 		{
-			cout << "The ball reached the ground after " << i << " milliseconds.\n";
+			cout << "The ball reached the ground after " << i << " hundredths of a second.\n";
 			break;
 		}
 	}
 
-	cout << "Please enter the same velocity (testing purposes). ";
-	double v_old2;
-	cin >> v_old2;
-
-	double s_new2;
-
-	for (int j = 0; j >= 0; j++)
-	{
-		s_new2 = (-0.5 * g * (j*j) + (v_old2 * j));
-
-		if (s_new2 <= 0)
-		{
-			cout << "The ball reached the ground after " << j << " seconds.\n";
-			break;
-		}
-	}
 	return 0;
 }
 
