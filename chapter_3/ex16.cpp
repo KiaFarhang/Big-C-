@@ -11,9 +11,11 @@ int main()
 	cin >> rate;
 
 	double input;
+	double input_2;
 	bool more = true;
 
 	/*
+
 	This loop runs while our boolean value "more" is equal to true.
 	The loop asks for a dollar value and stores it in the input variable.
 	If the user enters 0, more becomes false. The loop condition is
@@ -26,26 +28,31 @@ int main()
 		cout << "Enter your dollar value. Enter 0 to finish. ";
 		cin >> input;
 
+		double output = input * rate;
+		cout << "$" << input << " = " << output << " yen. \n";
+
+
 		if (input == 0)
 		{
 			more = false;
-		}
-		else
-		{
-
-			double output = input * rate;
-
-			cout << "$" << input << " = " << output << " yen. \n";
-
+			break;
 		}
 	}
 
 
-	while (cin >> input)
+	while (more == false)
 	{
-		double output2 = input / rate;
 
-		cout << input << " yen = $" << output2 << "\n";
+		cout << "Enter your yen values. ";
+		cin >> input_2;
+
+		while( cin >> input)
+		{
+
+			double output2 = input_2 / rate;
+
+			cout << input << " yen = $" << output2 << "\n";
+		}
 	}
 
 
