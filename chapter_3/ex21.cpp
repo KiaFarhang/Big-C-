@@ -19,6 +19,7 @@ int main()
 	given number and works down. For each iteration, it runs its own
 	loop. That secondary loop starts at 1 and checks every number
 	betwen 1 and i (the first loop counter) for its divisibility by i.
+
 	If j (the second loop) is only divisible by 1 and i, it's a prime
 	number and we print it. This cycle continues until i reaches 0
 	and we've checked every number below the one the user gave us.
