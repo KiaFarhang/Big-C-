@@ -32,9 +32,9 @@ PEmployee::PEmployee()
    salary = 0;
 }
 
-PEmployee::PEmployee(Person a, double initial_salary)
+PEmployee::PEmployee(Person person, double initial_salary)
 {
-   person_data = a.get_name();
+   person_data = person;
    salary = initial_salary;
 }
 
@@ -50,7 +50,7 @@ double PEmployee::get_salary() const
 
 string PEmployee::get_name() const
 {
-   return person_data;
+   return person_data.get_name();
 }
 
 
