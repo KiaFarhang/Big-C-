@@ -3,7 +3,7 @@
 
 using namespace std;
 
-double scalar_product(vector<double> a, vector<double> b)
+double scalar_product(const vector<double>& a, const vector<double>& b)
 {
 	double product = 0;
 	for (int i = 0; i < a.size(); i++)
